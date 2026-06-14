@@ -53,6 +53,19 @@ const cameras = [
     retentionDays: 1,
     recordSegmentDuration: 60,
     status: "UNKNOWN"
+  },
+  {
+    pathName: "mobilecam",
+    name: "Mobile Webcam",
+    description: "Mobile IP Webcam relayed through the MediaMTX simulator.",
+    location: "Mobile",
+    sourceUrl: "rtsp://mediamtx-simulator:18554/mobilecam",
+    streamType: "RTSP",
+    enabled: true,
+    recordingEnabled: false,
+    retentionDays: 1,
+    recordSegmentDuration: 60,
+    status: "UNKNOWN"
   }
 ] as const;
 

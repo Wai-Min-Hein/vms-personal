@@ -402,10 +402,8 @@ webrtcTrustedProxies: []
 # Address of a UDP/ICE listener that will receive connections.
 # Use a blank string to disable.
 webrtcLocalUDPAddress: :8189
-# Address of a TCP/ICE listener that will receive connections.
-# This is disabled by default since TCP is less efficient than UDP and
-# introduces a progressive delay when network is congested.
-webrtcLocalTCPAddress: ""
+# TCP fallback for browsers that cannot reach Docker's UDP ICE listener.
+webrtcLocalTCPAddress: :8189
 # WebRTC clients need to know the IP of the server.
 # Gather IPs from interfaces and send them to clients.
 webrtcIPsFromInterfaces: true
@@ -824,9 +822,13 @@ paths:
   cam1:
     source: rtsp://mediamtx-simulator:18554/vcam1
     rtspTransport: tcp
-    record: yes
+    record: no
   cam2:
     source: rtsp://mediamtx-simulator:18554/vcam2
+    rtspTransport: tcp
+    record: no
+  mobilecam:
+    source: rtsp://mediamtx-simulator:18554/mobilecam
     rtspTransport: tcp
     record: no
   # Settings under path "all_others" are applied to all paths that

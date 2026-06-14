@@ -38,14 +38,15 @@ pnpm run simulators
 The publishers run as Docker services, so closing the terminal does not stop
 the cameras. Stop them with `pnpm run simulators:stop`.
 
-MediaMTX recordings are bind-mounted to the project directory:
+MediaMTX recordings are stored in a Docker-managed named volume:
 
 ```text
-./recordings/<camera-path>/
+/recordings/<camera-path>/
 ```
 
-Files created inside the MediaMTX container therefore appear directly in the
-local `recordings` folder.
+The MediaMTX and application containers share the volume so recordings can be
+listed, probed, played, and deleted. Inspect it with
+`docker volume inspect vms_recordings`.
 
 The seed creates two cameras matching `infra/mediamtx/vms.yml`:
 
@@ -63,7 +64,10 @@ The default seeded login is `admin@example.com` / `ChangeMe123!`. Override both 
 
 ## Deployment
 
-Set a random `AUTH_SECRET` of at least 32 characters, use a managed MongoDB replica set with TLS, restrict the MediaMTX API to the application network, configure WebRTC public addresses/ICE, terminate HTTPS at the edge, and put recordings on durable shared storage.
+Set a random `AUTH_SECRET` of at least 32 characters, configure `MONGODB_URI`
+with a managed MongoDB connection string, restrict the MediaMTX API to the
+application network, configure WebRTC public addresses/ICE, terminate HTTPS at
+the edge, and put recordings on durable shared storage.
 
 Run database deployment before application rollout:
 
@@ -73,3 +77,10 @@ docker compose up -d --build
 ```
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for boundaries and scaling decisions.
+
+Run following command in terminal to start mobilecam
+
+ffmpeg -rtsp_transport tcp \
+  -i "rtsp://192.168.1.6:8080/h264.sdp" \
+  -c copy -f rtsp -rtsp_transport tcp \
+  "rtsp://localhost:18554/mobilecam"

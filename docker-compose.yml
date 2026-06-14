@@ -1,0 +1,180 @@
+services:
+  mongodb:
+    image: mongo:8.0
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "27017:27017"
+
+  mediamtx-simulator:
+    image: bluenviron/mediamtx:1.19.1
+    restart: unless-stopped
+    volumes:
+      - ./infra/mediamtx/simulator.yml:/mediamtx.yml:ro
+    ports:
+      - "18554:18554"
+      - "11935:11935"
+      - "18888:18888"
+      - "19997:19997"
+
+  simulator-vcam1:
+    build:
+      context: .
+      dockerfile: infra/ffmpeg/Dockerfile
+    command:
+      - -hide_banner
+      - -loglevel
+      - warning
+      - -re
+      - -stream_loop
+      - "-1"
+      - -i
+      - /videos/video.mp4
+      - -map
+      - 0:v:0
+      - -map
+      - 0:a:0?
+      - -c:v
+      - libx264
+      - -preset
+      - veryfast
+      - -tune
+      - zerolatency
+      - -profile:v
+      - main
+      - -pix_fmt
+      - yuv420p
+      - -g
+      - "48"
+      - -keyint_min
+      - "48"
+      - -bf
+      - "0"
+      - -c:a
+      - aac
+      - -ac
+      - "2"
+      - -ar
+      - "48000"
+      - -f
+      - rtsp
+      - -rtsp_transport
+      - tcp
+      - rtsp://mediamtx-simulator:18554/vcam1
+    depends_on:
+      mediamtx-simulator:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - ./public/videos:/videos:ro
+
+  simulator-vcam2:
+    build:
+      context: .
+      dockerfile: infra/ffmpeg/Dockerfile
+    command:
+      - -hide_banner
+      - -loglevel
+      - warning
+      - -re
+      - -stream_loop
+      - "-1"
+      - -i
+      - /videos/output.mp4
+      - -map
+      - 0:v:0
+      - -map
+      - 0:a:0?
+      - -c:v
+      - libx264
+      - -preset
+      - veryfast
+      - -tune
+      - zerolatency
+      - -profile:v
+      - main
+      - -pix_fmt
+      - yuv420p
+      - -g
+      - "48"
+      - -keyint_min
+      - "48"
+      - -bf
+      - "0"
+      - -c:a
+      - aac
+      - -ac
+      - "2"
+      - -ar
+      - "48000"
+      - -f
+      - rtsp
+      - -rtsp_transport
+      - tcp
+      - rtsp://mediamtx-simulator:18554/vcam2
+    depends_on:
+      mediamtx-simulator:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - ./public/videos:/videos:ro
+
+  mediamtx-vms:
+    image: bluenviron/mediamtx:1.19.1
+    restart: unless-stopped
+    depends_on:
+      mediamtx-simulator:
+        condition: service_started
+    volumes:
+      - ./infra/mediamtx/vms.yml:/mediamtx.yml:ro
+      - recordings:/recordings
+    ports:
+      - "8554:8554"
+      - "1935:1935"
+      - "8888:8888"
+      - "8889:8889"
+      - "8189:8189/udp"
+      - "9997:9997"
+
+  app:
+    build: .
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/vms
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET}
+      MEDIAMTX_API_URL: http://mediamtx-vms:9997
+      NEXT_PUBLIC_MEDIAMTX_HLS_URL: http://localhost:8888
+      NEXT_PUBLIC_MEDIAMTX_WEBRTC_URL: http://localhost:8889
+      RECORDINGS_PATH: /recordings
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      mediamtx-vms:
+        condition: service_started
+    ports:
+      - "3000:3000"
+
+  monitor:
+    build:
+      context: .
+      target: builder
+    command: ["npm", "run", "monitor"]
+    environment:
+      MONGODB_URI: mongodb://mongodb:27017/vms
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET}
+      MEDIAMTX_API_URL: http://mediamtx-vms:9997
+      NEXT_PUBLIC_MEDIAMTX_HLS_URL: http://localhost:8888
+      NEXT_PUBLIC_MEDIAMTX_WEBRTC_URL: http://localhost:8889
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      mediamtx-vms:
+        condition: service_started
+
+volumes:
+  mongodb_data:
+  recordings:

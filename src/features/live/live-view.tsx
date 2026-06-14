@@ -16,8 +16,22 @@ export function LiveView() {
   const cameras = useQuery({ queryKey: ["live"], queryFn: () => api<CameraView[]>("/api/live"), refetchInterval: 5_000 });
 
   useEffect(() => {
-    if (cameras.data && cameraIds.length === 0) setCameras(cameras.data.map((camera) => camera.id));
-  }, [cameraIds.length, cameras.data, setCameras]);
+    if (!cameras.data) return;
+
+    const availableIds = cameras.data.map((camera) => camera.id);
+    const availableSet = new Set(availableIds);
+    const retainedIds = cameraIds.filter((id) => availableSet.has(id));
+    const retainedSet = new Set(retainedIds);
+    const newIds = availableIds.filter((id) => !retainedSet.has(id));
+    const nextIds = [...retainedIds, ...newIds];
+
+    if (
+      nextIds.length !== cameraIds.length ||
+      nextIds.some((id, index) => id !== cameraIds[index])
+    ) {
+      setCameras(nextIds);
+    }
+  }, [cameraIds, cameras.data, setCameras]);
 
   const ordered = cameraIds.map((id) => cameras.data?.find((camera) => camera.id === id)).filter(Boolean) as CameraView[];
   return (

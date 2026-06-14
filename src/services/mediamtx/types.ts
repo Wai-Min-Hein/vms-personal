@@ -28,7 +28,7 @@ export interface MediaMtxPath {
 
 export interface MediaMtxRecordingSegment {
   start: string;
-  duration: number;
+  duration?: number | null;
   url?: string;
 }
 

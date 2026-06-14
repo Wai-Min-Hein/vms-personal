@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { api } from "@/lib/api-client";
 
-interface Segment { start: string; duration: number; url?: string }
+interface Segment { start: string; duration?: number | null; url?: string }
 interface Recording { name: string; segments: Segment[] }
 interface Response { items: Recording[] }
 
@@ -50,7 +50,7 @@ export function PlaybackView() {
         </CardContent></Card>
         <Card><CardContent className="max-h-[600px] overflow-y-auto p-3">
           <div className="mb-3 px-2 text-sm font-medium">Timeline segments</div>
-          <div className="space-y-2">{segments.map((item) => <button key={item.start} onClick={() => setSegment(item)} className={`w-full rounded-md border p-3 text-left text-sm ${segment?.start === item.start ? "border-primary bg-primary/10" : "hover:bg-accent"}`}><div>{new Date(item.start).toLocaleTimeString()}</div><div className="mt-1 text-xs text-muted-foreground">{Math.round(item.duration)} seconds</div></button>)}</div>
+          <div className="space-y-2">{segments.map((item) => <button key={item.start} onClick={() => setSegment(item)} className={`w-full rounded-md border p-3 text-left text-sm ${segment?.start === item.start ? "border-primary bg-primary/10" : "hover:bg-accent"}`}><div>{new Date(item.start).toLocaleTimeString()}</div><div className="mt-1 text-xs text-muted-foreground">{typeof item.duration === "number" && Number.isFinite(item.duration) ? `${Math.round(item.duration)} seconds` : "Recording..."}</div></button>)}</div>
           {!segments.length && <p className="p-6 text-center text-sm text-muted-foreground">No segments for this date.</p>}
         </CardContent></Card>
       </div>

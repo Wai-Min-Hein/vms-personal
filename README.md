@@ -38,6 +38,15 @@ pnpm run simulators
 The publishers run as Docker services, so closing the terminal does not stop
 the cameras. Stop them with `pnpm run simulators:stop`.
 
+MediaMTX recordings are bind-mounted to the project directory:
+
+```text
+./recordings/<camera-path>/
+```
+
+Files created inside the MediaMTX container therefore appear directly in the
+local `recordings` folder.
+
 The seed creates two cameras matching `infra/mediamtx/vms.yml`:
 
 | VMS path | Simulator source | Recording |

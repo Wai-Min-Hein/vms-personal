@@ -10,6 +10,7 @@ const serverSchema = z.object({
   MEDIAMTX_API_USERNAME: z.string().optional(),
   MEDIAMTX_API_PASSWORD: z.string().optional(),
   FFMPEG_PATH: z.string().default("ffmpeg"),
+  FFPROBE_PATH: z.string().default("ffprobe"),
   RECORDINGS_PATH: z.string().default("./recordings")
 });
 
@@ -26,6 +27,7 @@ export const env = serverSchema.parse({
   MEDIAMTX_API_USERNAME: process.env.MEDIAMTX_API_USERNAME,
   MEDIAMTX_API_PASSWORD: process.env.MEDIAMTX_API_PASSWORD,
   FFMPEG_PATH: process.env.FFMPEG_PATH,
+  FFPROBE_PATH: process.env.FFPROBE_PATH,
   RECORDINGS_PATH: process.env.RECORDINGS_PATH
 });
 

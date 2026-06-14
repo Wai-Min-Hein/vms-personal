@@ -44,3 +44,9 @@ echo "  VMS API -> http://localhost:9997"
 echo
 echo "View status with: docker compose ps"
 echo "Stop them with:  pnpm run simulators:stop"
+
+
+# ffmpeg -rtsp_transport tcp \
+#   -i "rtsp://192.168.1.6:8080/h264.sdp" \
+#   -c copy -f rtsp -rtsp_transport tcp \
+#   "rtsp://localhost:18554/mobilecam"

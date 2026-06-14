@@ -9,23 +9,11 @@ import type { CameraView } from "@/types";
 
 export function VideoPlayer({ camera }: { camera: CameraView }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const offlinePollsRef = useRef(camera.runtime?.ready ? 0 : 2);
   const [scale, setScale] = useState(1);
-  const [streamAvailable, setStreamAvailable] = useState(Boolean(camera.runtime?.ready));
   const [playbackState, setPlaybackState] = useState<
     "idle" | "connecting" | "webrtc" | "hls" | "error"
   >("idle");
-
-  useEffect(() => {
-    if (camera.runtime?.ready) {
-      offlinePollsRef.current = 0;
-      setStreamAvailable(true);
-      return;
-    }
-
-    offlinePollsRef.current += 1;
-    if (offlinePollsRef.current >= 2) setStreamAvailable(false);
-  }, [camera.runtime?.ready, camera.runtime?.readyTime]);
+  const streamAvailable = Boolean(camera.runtime?.ready);
 
   useEffect(() => {
     const video = videoRef.current;
@@ -264,7 +252,7 @@ export function VideoPlayer({ camera }: { camera: CameraView }) {
       cancelled = true;
       cleanupMedia();
     };
-  }, [camera.hlsUrl, camera.runtime?.readyTime, streamAvailable]);
+  }, [camera.hlsUrl, camera.runtime?.readyTime, camera.webRtcUrl, streamAvailable]);
 
   function snapshot() {
     const video = videoRef.current;

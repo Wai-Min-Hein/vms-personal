@@ -81,6 +81,6 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for boundaries and scaling deci
 Run following command in terminal to start mobilecam
 
 ffmpeg -rtsp_transport tcp \
-  -i "rtsp://192.168.1.6:8080/h264.sdp" \
+  -i "rtsp://192.168.1.2:8080/h264.sdp" \
   -c copy -f rtsp -rtsp_transport tcp \
   "rtsp://localhost:18554/mobilecam"

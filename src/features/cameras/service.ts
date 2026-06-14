@@ -77,6 +77,7 @@ export const cameraService = {
           ? {
               pathName: path.name,
               ready: path.ready,
+              readyTime: path.readyTime ?? null,
               online: path.ready,
               tracks: path.tracks ?? [],
               inboundBytes: path.bytesReceived ?? 0,

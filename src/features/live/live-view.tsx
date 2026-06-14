@@ -36,7 +36,7 @@ export function LiveView() {
   const ordered = cameraIds.map((id) => cameras.data?.find((camera) => camera.id === id)).filter(Boolean) as CameraView[];
   return (
     <>
-      <PageHeading title="Live View" description="Low-latency WebRTC with automatic HLS fallback." action={
+      <PageHeading title="Live View" description="Low-latency WebRTC with automatic HLS fallback and recovery." action={
         <div className="flex gap-1 rounded-lg border p-1">
           {([1, 2, 3, 4] as const).map((value) => (
             <Button key={value} size="icon" variant={columns === value ? "default" : "ghost"} onClick={() => setColumns(value)} title={`${value} columns`}>

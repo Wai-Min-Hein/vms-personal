@@ -17,6 +17,7 @@ export interface ApiError {
 export interface CameraRuntime {
   pathName: string;
   ready: boolean;
+  readyTime: string | null;
   online: boolean;
   tracks: string[];
   inboundBytes: number;

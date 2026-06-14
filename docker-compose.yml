@@ -14,6 +14,7 @@ services:
     build:
       context: .
       dockerfile: infra/ffmpeg/Dockerfile
+    entrypoint: ["/bin/sh", "/usr/local/bin/publish-loop"]
     command:
       - -hide_banner
       - -loglevel
@@ -60,11 +61,13 @@ services:
     restart: unless-stopped
     volumes:
       - ./public/videos:/videos:ro
+      - ./infra/ffmpeg/publish-loop.sh:/usr/local/bin/publish-loop:ro
 
   simulator-vcam2:
     build:
       context: .
       dockerfile: infra/ffmpeg/Dockerfile
+    entrypoint: ["/bin/sh", "/usr/local/bin/publish-loop"]
     command:
       - -hide_banner
       - -loglevel
@@ -111,6 +114,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./public/videos:/videos:ro
+      - ./infra/ffmpeg/publish-loop.sh:/usr/local/bin/publish-loop:ro
 
   mediamtx-vms:
     image: bluenviron/mediamtx:1.19.1

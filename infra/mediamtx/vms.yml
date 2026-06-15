@@ -220,7 +220,7 @@ pprofTrustedProxies: []
 # Global settings -> Playback server
 
 # Enable the playback server, which allows to download recordings from the server.
-playback: false
+playback: true
 # Address of the TCP/HTTP listener.
 playbackAddress: :9996
 # Enable HTTPS.

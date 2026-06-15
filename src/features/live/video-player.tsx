@@ -5,9 +5,16 @@ import { Camera as CameraIcon, Expand, ZoomIn, ZoomOut } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import type { CameraView } from "@/types";
 
-export function VideoPlayer({ camera }: { camera: CameraView }) {
+export function VideoPlayer({
+  camera,
+  active = false
+}: {
+  camera: CameraView;
+  active?: boolean;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [scale, setScale] = useState(1);
   const [playbackState, setPlaybackState] = useState<
@@ -268,7 +275,12 @@ export function VideoPlayer({ camera }: { camera: CameraView }) {
   }
 
   return (
-    <div className="group relative aspect-video overflow-hidden rounded-lg border bg-black">
+    <div
+      className={cn(
+        "group relative aspect-video overflow-hidden rounded-lg border bg-black transition-shadow",
+        active && "border-primary ring-2 ring-primary/70"
+      )}
+    >
       <video ref={videoRef} autoPlay muted playsInline className="h-full w-full object-contain transition-transform" style={{ transform: `scale(${scale})` }} />
       {!streamAvailable && <div className="absolute inset-0 grid place-items-center text-sm text-zinc-400">Stream offline</div>}
       {streamAvailable && playbackState === "connecting" && (

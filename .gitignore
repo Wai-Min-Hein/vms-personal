@@ -4,6 +4,6 @@ node_modules
 .env.local
 dist
 coverage
-recordings
+/recordings/
 *.log
 .DS_Store

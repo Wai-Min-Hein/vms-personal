@@ -11,6 +11,31 @@ function duration(value: number) {
   return `${value}s`;
 }
 
+function durationSeconds(value?: string) {
+  if (!value) return null;
+
+  const units: Record<string, number> = {
+    ns: 1e-9,
+    us: 1e-6,
+    "µs": 1e-6,
+    ms: 1e-3,
+    s: 1,
+    m: 60,
+    h: 3600,
+    d: 86400,
+    w: 604800
+  };
+  let total = 0;
+  let matched = false;
+
+  for (const match of value.matchAll(/(\d+(?:\.\d+)?)(ns|us|µs|ms|s|m|h|d|w)/g)) {
+    matched = true;
+    total += Number(match[1]) * units[match[2]];
+  }
+
+  return matched ? total : null;
+}
+
 function mediaMtxConfig(camera: {
   sourceUrl: string;
   enabled: boolean;
@@ -30,6 +55,22 @@ function mediaMtxConfig(camera: {
   };
 }
 
+function configurationMatches(
+  current: MediaMtxPathConfiguration,
+  desired: MediaMtxPathConfiguration
+) {
+  return (
+    current.source === desired.source &&
+    Boolean(current.record) === Boolean(desired.record) &&
+    current.recordFormat === desired.recordFormat &&
+    current.recordPath === desired.recordPath &&
+    durationSeconds(current.recordSegmentDuration) ===
+      durationSeconds(desired.recordSegmentDuration) &&
+    durationSeconds(current.recordDeleteAfter) ===
+      durationSeconds(desired.recordDeleteAfter)
+  );
+}
+
 async function createOrPatchPath(name: string, config: MediaMtxPathConfiguration) {
   try {
     await mediaMtx.patchPath(name, config);
@@ -37,6 +78,45 @@ async function createOrPatchPath(name: string, config: MediaMtxPathConfiguration
     if (!(error instanceof MediaMtxError) || error.status !== 404) throw error;
     await mediaMtx.createPath(name, config);
   }
+}
+
+let lastReconciliation = 0;
+let reconciliation: Promise<void> | null = null;
+
+async function reconcileMediaMtxPaths() {
+  const now = Date.now();
+  if (reconciliation) return reconciliation;
+  if (now - lastReconciliation < 15_000) return;
+
+  reconciliation = (async () => {
+    await connectMongo();
+    const cameras = await Camera.find();
+
+    await Promise.all(
+      cameras.map(async (camera) => {
+        if (!camera.enabled) {
+          await deletePathIfPresent(camera.pathName);
+          return;
+        }
+
+        const desired = mediaMtxConfig(camera.toObject());
+        try {
+          const current = await mediaMtx.getPathConfiguration(camera.pathName);
+          if (!configurationMatches(current, desired)) {
+            await mediaMtx.patchPath(camera.pathName, desired);
+          }
+        } catch (error) {
+          if (!(error instanceof MediaMtxError) || error.status !== 404) throw error;
+          await mediaMtx.createPath(camera.pathName, desired);
+        }
+      })
+    );
+    lastReconciliation = Date.now();
+  })().finally(() => {
+    reconciliation = null;
+  });
+
+  return reconciliation;
 }
 
 async function deletePathIfPresent(name: string) {
@@ -60,6 +140,7 @@ async function audit(
 export const cameraService = {
   async list() {
     await connectMongo();
+    await reconcileMediaMtxPaths();
     const [cameras, runtime] = await Promise.all([
       Camera.find().populate("groupId").sort({ name: 1 }),
       mediaMtx.getPaths().catch(() => ({ items: [], itemCount: 0, pageCount: 0 }))

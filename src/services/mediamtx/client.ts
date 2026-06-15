@@ -26,11 +26,15 @@ function authHeaders(): HeadersInit {
 }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  return requestUrl<T>(`${env.MEDIAMTX_API_URL}${path}`, init);
+}
+
+async function requestUrl<T>(url: string, init: RequestInit = {}): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8_000);
 
   try {
-    const response = await fetch(`${env.MEDIAMTX_API_URL}${path}`, {
+    const response = await fetch(url, {
       ...init,
       cache: "no-store",
       signal: controller.signal,
@@ -98,6 +102,12 @@ export const mediaMtx = {
     return request<MediaMtxPath>(`/v3/paths/get/${safePath(name)}`);
   },
 
+  getPathConfiguration(name: string) {
+    return request<MediaMtxPathConfiguration>(
+      `/v3/config/paths/get/${safePath(name)}`
+    );
+  },
+
   getPaths() {
     return request<PaginatedResponse<MediaMtxPath>>("/v3/paths/list");
   },
@@ -116,10 +126,17 @@ export const mediaMtx = {
     return request<MediaMtxRecording>(`/v3/recordings/get/${safePath(name)}`);
   },
 
+  getPlaybackSegments(name: string) {
+    const params = new URLSearchParams({ path: name });
+    return requestUrl<MediaMtxRecording["segments"]>(
+      `${env.MEDIAMTX_PLAYBACK_URL}/list?${params.toString()}`
+    );
+  },
+
   deleteRecording(name: string, start: string, end: string) {
-    const params = new URLSearchParams({ start, end });
+    const params = new URLSearchParams({ path: name, start, end });
     return request<void>(
-      `/v3/recordings/deletesegment/${safePath(name)}?${params.toString()}`,
+      `/v3/recordings/deletesegment?${params.toString()}`,
       { method: "DELETE" }
     );
   }

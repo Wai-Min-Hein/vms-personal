@@ -7,6 +7,7 @@ const serverSchema = z.object({
   MONGODB_URI: z.string().min(1),
   AUTH_SECRET: z.string().min(32),
   MEDIAMTX_API_URL: z.string().url().default("http://localhost:9997"),
+  MEDIAMTX_PLAYBACK_URL: z.string().url().default("http://localhost:9996"),
   MEDIAMTX_API_USERNAME: z.string().optional(),
   MEDIAMTX_API_PASSWORD: z.string().optional(),
   FFMPEG_PATH: z.string().default("ffmpeg"),
@@ -17,6 +18,7 @@ const serverSchema = z.object({
 const clientSchema = z.object({
   NEXT_PUBLIC_MEDIAMTX_HLS_URL: z.string().url().default("http://localhost:8888"),
   NEXT_PUBLIC_MEDIAMTX_WEBRTC_URL: z.string().url().default("http://localhost:8889"),
+  NEXT_PUBLIC_MEDIAMTX_PLAYBACK_URL: z.string().url().default("http://localhost:9996"),
   NEXT_PUBLIC_APP_NAME: z.string().default("Sentinel VMS")
 });
 
@@ -24,6 +26,7 @@ export const env = serverSchema.parse({
   MONGODB_URI: process.env.MONGODB_URI,
   AUTH_SECRET: process.env.AUTH_SECRET,
   MEDIAMTX_API_URL: process.env.MEDIAMTX_API_URL,
+  MEDIAMTX_PLAYBACK_URL: process.env.MEDIAMTX_PLAYBACK_URL,
   MEDIAMTX_API_USERNAME: process.env.MEDIAMTX_API_USERNAME,
   MEDIAMTX_API_PASSWORD: process.env.MEDIAMTX_API_PASSWORD,
   FFMPEG_PATH: process.env.FFMPEG_PATH,
@@ -34,5 +37,6 @@ export const env = serverSchema.parse({
 export const publicEnv = clientSchema.parse({
   NEXT_PUBLIC_MEDIAMTX_HLS_URL: process.env.NEXT_PUBLIC_MEDIAMTX_HLS_URL,
   NEXT_PUBLIC_MEDIAMTX_WEBRTC_URL: process.env.NEXT_PUBLIC_MEDIAMTX_WEBRTC_URL,
+  NEXT_PUBLIC_MEDIAMTX_PLAYBACK_URL: process.env.NEXT_PUBLIC_MEDIAMTX_PLAYBACK_URL,
   NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME
 });

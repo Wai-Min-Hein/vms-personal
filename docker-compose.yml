@@ -132,6 +132,7 @@ services:
       - "8889:8889"
       - "8189:8189/udp"
       - "8189:8189/tcp"
+      - "9996:9996"
       - "9997:9997"
 
   app:
@@ -140,8 +141,10 @@ services:
       MONGODB_URI: ${MONGODB_URI:?Set MONGODB_URI}
       AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET}
       MEDIAMTX_API_URL: http://mediamtx-vms:9997
+      MEDIAMTX_PLAYBACK_URL: http://mediamtx-vms:9996
       NEXT_PUBLIC_MEDIAMTX_HLS_URL: http://localhost:8888
       NEXT_PUBLIC_MEDIAMTX_WEBRTC_URL: http://localhost:8889
+      NEXT_PUBLIC_MEDIAMTX_PLAYBACK_URL: http://localhost:9996
       RECORDINGS_PATH: /recordings
     depends_on:
       mediamtx-vms:

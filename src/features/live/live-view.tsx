@@ -12,7 +12,15 @@ import type { CameraView } from "@/types";
 import { VideoPlayer } from "./video-player";
 
 export function LiveView() {
-  const { columns, cameraIds, setColumns, setCameras, moveCamera } = useLiveStore();
+  const {
+    columns,
+    cameraIds,
+    activeCameraId,
+    setColumns,
+    setCameras,
+    setActiveCamera,
+    moveCamera
+  } = useLiveStore();
   const cameras = useQuery({ queryKey: ["live"], queryFn: () => api<CameraView[]>("/api/live"), refetchInterval: 5_000 });
 
   useEffect(() => {
@@ -27,13 +35,24 @@ export function LiveView() {
 
     if (
       nextIds.length !== cameraIds.length ||
-      nextIds.some((id, index) => id !== cameraIds[index])
+      nextIds.some((id, index) => id !== cameraIds[index]) ||
+      !activeCameraId ||
+      !availableSet.has(activeCameraId)
     ) {
       setCameras(nextIds);
     }
-  }, [cameraIds, cameras.data, setCameras]);
+  }, [activeCameraId, cameraIds, cameras.data, setCameras]);
 
   const ordered = cameraIds.map((id) => cameras.data?.find((camera) => camera.id === id)).filter(Boolean) as CameraView[];
+  const activeCamera =
+    ordered.find((camera) => camera.id === activeCameraId) ?? ordered[0];
+  const visibleCameras =
+    columns === 1
+      ? activeCamera
+        ? [activeCamera]
+        : []
+      : ordered.slice(0, columns * columns);
+
   return (
     <>
       <PageHeading title="Live View" description="Low-latency WebRTC with automatic HLS fallback and recovery." action={
@@ -46,15 +65,27 @@ export function LiveView() {
         </div>
       } />
       <div className={cn("grid gap-3", columns === 1 && "grid-cols-1", columns === 2 && "grid-cols-1 xl:grid-cols-2", columns === 3 && "grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3", columns === 4 && "grid-cols-1 lg:grid-cols-2 2xl:grid-cols-4")}>
-        {ordered.slice(0, columns * columns).map((camera, index) => (
+        {visibleCameras.map((camera, index) => (
           <div
             key={camera.id}
             draggable
+            role="button"
+            tabIndex={0}
+            aria-label={`Select ${camera.name}`}
+            aria-pressed={camera.id === activeCameraId}
+            onClick={() => setActiveCamera(camera.id)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                setActiveCamera(camera.id);
+              }
+            }}
             onDragStart={(event) => event.dataTransfer.setData("index", String(index))}
             onDragOver={(event) => event.preventDefault()}
             onDrop={(event) => moveCamera(Number(event.dataTransfer.getData("index")), index)}
+            className="rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <VideoPlayer camera={camera} />
+            <VideoPlayer camera={camera} active={camera.id === activeCameraId} />
           </div>
         ))}
       </div>

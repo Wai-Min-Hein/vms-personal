@@ -1,4 +1,5 @@
 export interface MediaMtxPathConfiguration {
+  name?: string;
   source: string;
   sourceOnDemand?: boolean;
   sourceOnDemandStartTimeout?: string;
@@ -30,6 +31,7 @@ export interface MediaMtxRecordingSegment {
   start: string;
   duration?: number | null;
   url?: string;
+  active?: boolean;
 }
 
 export interface MediaMtxRecording {

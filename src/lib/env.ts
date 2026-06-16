@@ -16,6 +16,7 @@ const serverSchema = z.object({
 });
 
 const clientSchema = z.object({
+  NEXT_PUBLIC_MEDIAMTX_API_URL: z.string().url().default("http://localhost:9997"),
   NEXT_PUBLIC_MEDIAMTX_HLS_URL: z.string().url().default("http://localhost:8888"),
   NEXT_PUBLIC_MEDIAMTX_WEBRTC_URL: z.string().url().default("http://localhost:8889"),
   NEXT_PUBLIC_MEDIAMTX_PLAYBACK_URL: z.string().url().default("http://localhost:9996"),
@@ -35,6 +36,7 @@ export const env = serverSchema.parse({
 });
 
 export const publicEnv = clientSchema.parse({
+  NEXT_PUBLIC_MEDIAMTX_API_URL: process.env.NEXT_PUBLIC_MEDIAMTX_API_URL,
   NEXT_PUBLIC_MEDIAMTX_HLS_URL: process.env.NEXT_PUBLIC_MEDIAMTX_HLS_URL,
   NEXT_PUBLIC_MEDIAMTX_WEBRTC_URL: process.env.NEXT_PUBLIC_MEDIAMTX_WEBRTC_URL,
   NEXT_PUBLIC_MEDIAMTX_PLAYBACK_URL: process.env.NEXT_PUBLIC_MEDIAMTX_PLAYBACK_URL,

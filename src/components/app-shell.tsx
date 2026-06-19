@@ -14,7 +14,6 @@ import {
   PlaySquare,
   Radio,
   Settings,
-  Send,
   Sun,
   Users,
   Video
@@ -27,7 +26,6 @@ const navigation = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/cameras", label: "Cameras", icon: Camera },
   { href: "/live", label: "Live View", icon: Radio },
-  { href: "/publish", label: "Publish", icon: Send },
   { href: "/recordings", label: "Recordings", icon: Video },
   { href: "/playback", label: "Playback", icon: PlaySquare },
   { href: "/notifications", label: "Notifications", icon: Bell },

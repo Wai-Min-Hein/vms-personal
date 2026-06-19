@@ -140,20 +140,37 @@ services:
     environment:
       MONGODB_URI: ${MONGODB_URI:?Set MONGODB_URI}
       AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET}
+      ALARM_INGEST_TOKEN: ${ALARM_INGEST_TOKEN:?Set ALARM_INGEST_TOKEN}
       MEDIAMTX_API_URL: http://mediamtx-vms:9997
       MEDIAMTX_PLAYBACK_URL: http://mediamtx-vms:9996
+      TAMPER_RTSP_BASE_URL: rtsp://mediamtx-vms:8554
+      REALTIME_INTERNAL_URL: http://realtime:3001
       NEXT_PUBLIC_MEDIAMTX_API_URL: http://localhost:9997
       NEXT_PUBLIC_MEDIAMTX_HLS_URL: http://localhost:8888
       NEXT_PUBLIC_MEDIAMTX_WEBRTC_URL: http://localhost:8889
       NEXT_PUBLIC_MEDIAMTX_PLAYBACK_URL: http://localhost:9996
+      NEXT_PUBLIC_SOCKET_URL: http://localhost:3001
       RECORDINGS_PATH: /recordings
     depends_on:
       mediamtx-vms:
+        condition: service_started
+      realtime:
         condition: service_started
     ports:
       - "3000:3000"
     volumes:
       - recordings:/recordings
+
+  realtime:
+    build:
+      context: .
+      dockerfile: realtime/Dockerfile
+    restart: unless-stopped
+    environment:
+      PORT: 3001
+      SOCKET_CORS_ORIGIN: "*"
+    ports:
+      - "3001:3001"
 
   monitor:
     build:
@@ -171,5 +188,27 @@ services:
       mediamtx-vms:
         condition: service_started
 
+  tamper-detection:
+    build:
+      context: .
+      dockerfile: tamper-detection/Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_BASE_URL: http://app:3000
+      ALARM_INGEST_TOKEN: ${ALARM_INGEST_TOKEN:?Set ALARM_INGEST_TOKEN}
+      TAMPER_SCREENSHOT_DIR: /tamper-screenshots
+      TAMPER_CAMERA_POLL_SECONDS: 10
+      TAMPER_FRAME_INTERVAL_SECONDS: 1
+      TAMPER_CONSECUTIVE_FRAMES: 1
+      TAMPER_COOLDOWN_SECONDS: 30
+    depends_on:
+      app:
+        condition: service_started
+      mediamtx-vms:
+        condition: service_started
+    volumes:
+      - tamper_screenshots:/tamper-screenshots
+
 volumes:
   recordings:
+  tamper_screenshots:

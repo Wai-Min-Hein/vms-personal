@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Activity, Camera, CircleOff, Database, Download, Radio, Upload, Video } from "lucide-react";
+import { Activity, AlertTriangle, Camera, CircleOff, Database, Download, Radio, Upload, Video } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { PageHeading } from "@/components/page-heading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,9 +11,16 @@ import { formatBytes } from "@/lib/utils";
 interface DashboardData {
   totals: {
     cameras: number; online: number; offline: number; recording: number; storageBytes: number;
-    recordings: number; activeReaders: number; inboundBytes: number; outboundBytes: number;
+    recordings: number; activeReaders: number; inboundBytes: number; outboundBytes: number; activeAlarms: number;
   };
   history: Array<{ time: string; inbound: number; outbound: number; online: number }>;
+  recentAlarms: Array<{
+    id: string;
+    type: string;
+    confidence: number;
+    detectedAt: string;
+    cameraId?: { name?: string; pathName?: string } | null;
+  }>;
 }
 
 export function DashboardView() {
@@ -32,7 +39,8 @@ export function DashboardView() {
     ["Recordings", data.totals.recordings, Activity],
     ["Active Readers", data.totals.activeReaders, Activity],
     ["Inbound", formatBytes(data.totals.inboundBytes), Download],
-    ["Outbound", formatBytes(data.totals.outboundBytes), Upload]
+    ["Outbound", formatBytes(data.totals.outboundBytes), Upload],
+    ["Active Alarms", data.totals.activeAlarms, AlertTriangle]
   ] as const : [];
 
   return (
@@ -69,6 +77,28 @@ export function DashboardView() {
               </AreaChart>
             </ResponsiveContainer>
           ) : <div className="grid h-full place-items-center text-sm text-muted-foreground">Metric history appears after the monitoring worker starts.</div>}
+        </CardContent>
+      </Card>
+      <Card className="mt-6">
+        <CardHeader><CardTitle>Recent Tamper Alarms</CardTitle></CardHeader>
+        <CardContent>
+          {data?.recentAlarms?.length ? (
+            <div className="divide-y divide-border">
+              {data.recentAlarms.map((alarm) => (
+                <div key={alarm.id} className="flex items-center justify-between gap-4 py-3 text-sm">
+                  <div>
+                    <div className="font-medium">{alarm.cameraId?.name ?? "Unknown camera"}</div>
+                    <div className="text-muted-foreground">{alarm.type} · {Math.round(alarm.confidence * 100)}%</div>
+                  </div>
+                  <div className="text-right text-muted-foreground">
+                    {new Date(alarm.detectedAt).toLocaleString()}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">No tamper alarms detected.</div>
+          )}
         </CardContent>
       </Card>
     </>

@@ -1,0 +1,1 @@
+"""Camera tamper detection worker."""

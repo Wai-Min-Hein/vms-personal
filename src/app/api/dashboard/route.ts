@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { connectMongo } from "@/lib/mongodb";
-import { Camera, CameraMetric, Recording } from "@/models";
+import { Alarm, Camera, CameraMetric, Recording } from "@/models";
 import { apiError } from "@/lib/http";
 import { toJsonSafe } from "@/lib/utils";
 import { requirePermission } from "@/services/auth/session";
@@ -11,7 +11,7 @@ export async function GET() {
   try {
     await requirePermission("cameras:view");
     await connectMongo();
-    const [cameras, recordings, runtime, recentMetrics] = await Promise.all([
+    const [cameras, recordings, runtime, recentMetrics, alarmCount, recentAlarms] = await Promise.all([
       Camera.find({}, { pathName: 1, recordingEnabled: 1, enabled: 1 }).lean(),
       Recording.aggregate<{ count: number; storageBytes: number }>([
         { $group: { _id: null, count: { $sum: 1 }, storageBytes: { $sum: "$sizeBytes" } } }
@@ -20,7 +20,12 @@ export async function GET() {
       CameraMetric.find({ capturedAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } })
         .sort({ capturedAt: 1 })
         .limit(500)
-        .lean()
+        .lean(),
+      Alarm.countDocuments({ acknowledged: false }),
+      Alarm.find()
+        .populate("cameraId", "name pathName")
+        .sort({ detectedAt: -1 })
+        .limit(5)
     ]);
 
     const runtimeByName = new Map<string, MediaMtxPath>(
@@ -49,9 +54,11 @@ export async function GET() {
           recordings: recordings[0]?.count ?? 0,
           activeReaders,
           inboundBytes,
-          outboundBytes
+          outboundBytes,
+          activeAlarms: alarmCount
         },
-        history
+        history,
+        recentAlarms
       })
     );
   } catch (error) {

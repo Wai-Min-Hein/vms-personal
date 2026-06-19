@@ -77,10 +77,11 @@ docker compose up -d --build
 ```
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for boundaries and scaling decisions.
+See [docs/TAMPER_DETECTION.md](docs/TAMPER_DETECTION.md) for the OpenCV tamper detection worker.
 
 Run following command in terminal to start mobilecam
 
 ffmpeg -rtsp_transport tcp \
-  -i "rtsp://192.168.1.2:8080/h264.sdp" \
+  -i "rtsp://192.168.1.7:8080/h264.sdp" \
   -c copy -f rtsp -rtsp_transport tcp \
   "rtsp://localhost:18554/mobilecam"

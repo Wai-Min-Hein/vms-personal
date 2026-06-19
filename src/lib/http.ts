@@ -31,6 +31,26 @@ export function apiError(error: unknown) {
       { status: 400 }
     );
   }
+  if (
+    error instanceof mongoose.mongo.MongoNetworkError ||
+    error instanceof mongoose.mongo.MongoServerSelectionError
+  ) {
+    return NextResponse.json(
+      { error: { code: "DATABASE_UNAVAILABLE", message: "MongoDB is temporarily unavailable" } },
+      { status: 503 }
+    );
+  }
+  if (
+    typeof error === "object" &&
+    error &&
+    "code" in error &&
+    ["ECONNRESET", "ENOTFOUND", "ESERVFAIL", "ETIMEOUT"].includes(String(error.code))
+  ) {
+    return NextResponse.json(
+      { error: { code: "DATABASE_UNAVAILABLE", message: "MongoDB is temporarily unavailable" } },
+      { status: 503 }
+    );
+  }
   if (typeof error === "object" && error && "code" in error && error.code === 11000) {
     return NextResponse.json(
       { error: { code: "DUPLICATE_VALUE", message: "A unique value already exists" } },

@@ -5,7 +5,8 @@ import {
   NOTIFICATION_SEVERITIES,
   NOTIFICATION_TYPES,
   RECORDING_STATUSES,
-  STREAM_TYPES
+  STREAM_TYPES,
+  TAMPER_TYPES
 } from "./constants";
 
 const schemaOptions = {
@@ -91,6 +92,16 @@ const notificationSchema = new Schema({
 }, schemaOptions);
 notificationSchema.index({ acknowledged: 1, createdAt: -1 });
 
+const alarmSchema = new Schema({
+  cameraId: { type: Schema.Types.ObjectId, ref: "Camera", required: true, index: true },
+  type: { type: String, enum: TAMPER_TYPES, required: true, index: true },
+  confidence: { type: Number, required: true, min: 0, max: 1 },
+  screenshotPath: { type: String, required: true },
+  detectedAt: { type: Date, required: true, index: true },
+  acknowledged: { type: Boolean, default: false, index: true }
+}, schemaOptions);
+alarmSchema.index({ cameraId: 1, detectedAt: -1 });
+
 const auditLogSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: "User", default: null, index: true },
   action: { type: String, enum: AUDIT_ACTIONS, required: true },
@@ -107,6 +118,7 @@ type CameraType = InferSchemaType<typeof cameraSchema>;
 type RecordingType = InferSchemaType<typeof recordingSchema>;
 type CameraMetricType = InferSchemaType<typeof cameraMetricSchema>;
 type NotificationType = InferSchemaType<typeof notificationSchema>;
+type AlarmType = InferSchemaType<typeof alarmSchema>;
 type AuditLogType = InferSchemaType<typeof auditLogSchema>;
 
 export const Role = (models.Role as Model<RoleType>) || model<RoleType>("Role", roleSchema);
@@ -116,4 +128,5 @@ export const Camera = (models.Camera as Model<CameraType>) || model<CameraType>(
 export const Recording = (models.Recording as Model<RecordingType>) || model<RecordingType>("Recording", recordingSchema);
 export const CameraMetric = (models.CameraMetric as Model<CameraMetricType>) || model<CameraMetricType>("CameraMetric", cameraMetricSchema);
 export const Notification = (models.Notification as Model<NotificationType>) || model<NotificationType>("Notification", notificationSchema);
+export const Alarm = (models.Alarm as Model<AlarmType>) || model<AlarmType>("Alarm", alarmSchema);
 export const AuditLog = (models.AuditLog as Model<AuditLogType>) || model<AuditLogType>("AuditLog", auditLogSchema);
